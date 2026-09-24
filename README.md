@@ -95,7 +95,7 @@ Meet&Mani is currently in its early development stage.
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/meet-and-mani.git
+git clone https://github.com/Aristide-Izab/meet-and-mani.git
 ```
 
 Navigate to the project:
@@ -142,6 +142,6 @@ Beyond building a functional marketplace, this project is an opportunity to appl
 
 Application Development Student | Aspiring Software Developer
 
-GitHub: https://github.com/YOUR-USERNAME
+GitHub: https://github.com/Aristide-Izab
 
 LinkedIn: https://www.linkedin.com/in/aristide-izabkora/
