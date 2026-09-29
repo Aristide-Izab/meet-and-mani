@@ -1,4 +1,7 @@
-
+import { Routes, Route, Link } from 'react-router-dom'
+import NailTechRegister from './pages/NailTechRegister'
+import BusinessDetails from './pages/BusinessDetails'
+import ServicesPricing from './pages/ServicesPricing'
 import { useState } from 'react'
 import {
   ArrowRight,
@@ -9,6 +12,7 @@ import {
   Sparkles,
   X
 } from 'lucide-react'
+
 
 const services = [
   {
@@ -31,7 +35,7 @@ const services = [
   },
 ]
 
-function App() {
+function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [location, setLocation] = useState('')
 
@@ -48,8 +52,12 @@ function App() {
           </a>
 
           <div className="hidden md:flex items-center gap-9 text-sm">
-            <a href="#home" className="hover:text-[#a55c72]">Home</a>
-            <a href="#services" className="hover:text-[#a55c72]">Services</a>
+            <a href="#home" className="hover:text-[#a55c72]">
+              Home
+            </a>
+            <a href="#services" className="hover:text-[#a55c72]">
+              Services
+            </a>
             <a href="#how-it-works" className="hover:text-[#a55c72]">
               How It Works
             </a>
@@ -59,9 +67,7 @@ function App() {
           </div>
 
           <div className="hidden md:flex gap-3">
-            <button className="px-5 py-2 text-[#a55c72]">
-              Log In
-            </button>
+            <button className="px-5 py-2 text-[#a55c72]">Log In</button>
             <button className="px-6 py-2.5 bg-[#a55c72] text-white rounded-full hover:bg-[#87465b]">
               Sign Up
             </button>
@@ -78,8 +84,12 @@ function App() {
 
         {menuOpen && (
           <div className="md:hidden px-6 pb-6 flex flex-col gap-4">
-            <a href="#home" onClick={() => setMenuOpen(false)}>Home</a>
-            <a href="#services" onClick={() => setMenuOpen(false)}>Services</a>
+            <a href="#home" onClick={() => setMenuOpen(false)}>
+              Home
+            </a>
+            <a href="#services" onClick={() => setMenuOpen(false)}>
+              Services
+            </a>
             <a href="#how-it-works" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
@@ -95,10 +105,7 @@ function App() {
       </header>
 
       {/* Hero */}
-      <section
-        id="home"
-        className="bg-[#fcf1ee] px-6 py-16 md:py-24"
-      >
+      <section id="home" className="bg-[#fcf1ee] px-6 py-16 md:py-24">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-flex items-center gap-2 text-[#a55c72] text-sm mb-6">
@@ -109,15 +116,12 @@ function App() {
             <h1 className="font-serif text-5xl md:text-7xl leading-tight mb-7">
               Beautiful nails.
               <br />
-              <span className="italic text-[#b76f85]">
-                Beautiful moments.
-              </span>
+              <span className="italic text-[#b76f85]">Beautiful moments.</span>
             </h1>
 
             <p className="text-[#75676d] text-lg leading-relaxed max-w-lg mb-9">
-              Discover talented nail technicians near you.
-              Explore their work, find your perfect style
-              and book your next appointment.
+              Discover talented nail technicians near you. Explore their work,
+              find your perfect style and book your next appointment.
             </p>
 
             <div className="bg-white rounded-2xl p-3 shadow-sm flex flex-col sm:flex-row gap-3 max-w-lg">
@@ -134,8 +138,8 @@ function App() {
 
               <button
                 onClick={() =>
-                  document.getElementById('services')?.scrollIntoView({
-                    behavior: 'smooth'
+                  document.getElementById("services")?.scrollIntoView({
+                    behavior: "smooth",
                   })
                 }
                 className="bg-[#a55c72] text-white px-6 py-3 rounded-xl flex justify-center items-center gap-2"
@@ -176,9 +180,7 @@ function App() {
           <h2 className="font-serif text-4xl md:text-5xl mb-4">
             Beauty at your fingertips
           </h2>
-          <p className="text-gray-500">
-            Explore nail services you'll love.
-          </p>
+          <p className="text-gray-500">Explore nail services you'll love.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -193,12 +195,8 @@ function App() {
                 className="w-full h-64 object-cover"
               />
               <div className="p-7">
-                <h3 className="font-serif text-2xl mb-2">
-                  {service.name}
-                </h3>
-                <p className="text-gray-500 mb-5">
-                  {service.description}
-                </p>
+                <h3 className="font-serif text-2xl mb-2">{service.name}</h3>
+                <p className="text-gray-500 mb-5">{service.description}</p>
                 <button className="text-[#a55c72] flex items-center gap-2 font-medium">
                   Explore service <ArrowRight size={17} />
                 </button>
@@ -219,30 +217,26 @@ function App() {
             {[
               {
                 icon: <Search size={28} />,
-                title: 'Discover',
-                text: 'Find talented nail technicians in your area.'
+                title: "Discover",
+                text: "Find talented nail technicians in your area.",
               },
               {
                 icon: <Heart size={28} />,
-                title: 'Choose',
-                text: 'Explore portfolios and select your favorite services.'
+                title: "Choose",
+                text: "Explore portfolios and select your favorite services.",
               },
               {
                 icon: <CalendarDays size={28} />,
-                title: 'Book',
-                text: 'Choose an appointment that fits your schedule.'
-              }
+                title: "Book",
+                text: "Choose an appointment that fits your schedule.",
+              },
             ].map((step) => (
               <div key={step.title} className="flex flex-col items-center">
                 <div className="bg-white text-[#a55c72] rounded-full p-6 mb-6">
                   {step.icon}
                 </div>
-                <h3 className="font-serif text-2xl mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-500 max-w-xs">
-                  {step.text}
-                </p>
+                <h3 className="font-serif text-2xl mb-3">{step.title}</h3>
+                <p className="text-gray-500 max-w-xs">{step.text}</p>
               </div>
             ))}
           </div>
@@ -257,25 +251,37 @@ function App() {
             Your talent deserves to shine.
           </h2>
           <p className="max-w-xl mx-auto mb-9 text-rose-100">
-            Join Meet&Mani, showcase your nail artistry,
-            manage your appointments and grow your beauty business.
+            Join Meet&Mani, showcase your nail artistry, manage your
+            appointments and grow your beauty business.
           </p>
-          <button className="bg-white text-[#a55c72] px-9 py-4 rounded-full font-semibold">
+          <Link
+            to="/nail-tech/register"
+            className="inline-block bg-white text-[#a55c72] px-9 py-4 rounded-full font-semibold"
+          >
             Join as a Nail Technician
-          </button>
+          </Link>
         </div>
       </section>
 
       <footer className="border-t border-rose-100 py-10 text-center">
-        <p className="font-semibold text-xl text-[#a55c72] mb-2">
-          Meet&Mani.
-        </p>
+        <p className="font-semibold text-xl text-[#a55c72] mb-2">Meet&Mani.</p>
         <p className="text-sm text-gray-500">
           © 2026 Meet&Mani. Made for beauty lovers.
         </p>
       </footer>
     </div>
-  )
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/nail-tech/register" element={<NailTechRegister />} />
+      <Route path="/nail-tech/business-details" element={<BusinessDetails />} />
+      <Route path="/nail-tech/services" element={<ServicesPricing />} />
+    </Routes>
+  );
 }
 
 export default App
