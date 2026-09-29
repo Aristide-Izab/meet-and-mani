@@ -2,6 +2,8 @@ import { Routes, Route, Link } from 'react-router-dom'
 import NailTechRegister from './pages/NailTechRegister'
 import BusinessDetails from './pages/BusinessDetails'
 import ServicesPricing from './pages/ServicesPricing'
+import Portfolio from './pages/Portfolio'
+import Availability from './pages/Availability'
 import { useState } from 'react'
 import {
   ArrowRight,
@@ -280,6 +282,8 @@ function App() {
       <Route path="/nail-tech/register" element={<NailTechRegister />} />
       <Route path="/nail-tech/business-details" element={<BusinessDetails />} />
       <Route path="/nail-tech/services" element={<ServicesPricing />} />
+      <Route path="/nail-tech/portfolio" element={<Portfolio />} />
+      <Route path="/nail-tech/availability" element={<Availability />} />
     </Routes>
   );
 }
