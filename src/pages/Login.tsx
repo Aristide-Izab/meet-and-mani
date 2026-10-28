@@ -1,7 +1,16 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AccountTypeToggle, { type AccountType } from '../components/AccountTypeToggle'
+import { useAppData } from '../context/useAppData'
+
+type LoginState = { from?: string; accountType?: AccountType } | null
+
+// Turns "thandi.mokoena@..." into "Thandi" for the dummy login.
+const nameFromEmail = (email: string) => {
+  const first = email.split('@')[0].split(/[._\-\d]/)[0] || 'there'
+  return first.charAt(0).toUpperCase() + first.slice(1)
+}
 
 const content = {
   customer: {
@@ -24,7 +33,13 @@ const content = {
 
 function Login() {
   const navigate = useNavigate()
-  const [accountType, setAccountType] = useState<AccountType>('customer')
+  const location = useLocation()
+  const loginState = location.state as LoginState
+  const { logIn, myProfile, updateMyProfile } = useAppData()
+
+  const [accountType, setAccountType] = useState<AccountType>(
+    loginState?.accountType ?? 'customer'
+  )
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
@@ -46,8 +61,31 @@ function Login() {
 
     // Dummy login: any email and password is accepted.
     // Real authentication will be added with the Spring Boot backend.
-    console.log('Login:', { accountType, email: form.email })
-    navigate(current.dashboard)
+    if (accountType === 'nail-tech') {
+      const hasProfile = myProfile.email !== ''
+      const user = {
+        role: accountType,
+        firstName: hasProfile ? myProfile.firstName : nameFromEmail(form.email),
+        lastName: hasProfile ? myProfile.lastName : '',
+        email: hasProfile ? myProfile.email : form.email,
+      }
+
+      if (!hasProfile) {
+        updateMyProfile({ firstName: user.firstName, email: user.email })
+      }
+
+      logIn(user)
+    } else {
+      logIn({
+        role: accountType,
+        firstName: nameFromEmail(form.email),
+        lastName: '',
+        email: form.email.toLowerCase(),
+      })
+    }
+
+    const canReturn = loginState?.from && loginState.accountType === accountType
+    navigate(canReturn ? loginState.from! : current.dashboard)
   }
 
   return (
@@ -134,12 +172,12 @@ function Login() {
                   <label htmlFor="password" className="block text-sm font-medium">
                     Password
                   </label>
-                  <button
-                    type="button"
+                  <Link
+                    to="/forgot-password"
                     className="text-xs text-[#a55c72] hover:underline"
                   >
                     Forgot password?
-                  </button>
+                  </Link>
                 </div>
 
                 <div className="relative">
@@ -187,7 +225,11 @@ function Login() {
 
               <p className="text-center text-sm text-gray-500">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-[#a55c72] font-semibold">
+                <Link
+                  to="/register"
+                  state={loginState}
+                  className="text-[#a55c72] font-semibold"
+                >
                   Sign up
                 </Link>
               </p>

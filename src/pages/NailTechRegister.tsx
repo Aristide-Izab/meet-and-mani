@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAppData } from '../context/useAppData'
 
 function NailTechRegister() {
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
+  const { myProfile, updateMyProfile, logIn } = useAppData()
 
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    firstName: myProfile.firstName,
+    lastName: myProfile.lastName,
+    email: myProfile.email,
     password: '',
   })
 
@@ -23,8 +25,15 @@ function NailTechRegister() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    // Backend connection will be added later.
-    console.log('Nail technician registration:', form)
+    // Dummy registration: saved in the in-memory store until the backend exists.
+    const account = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+    }
+
+    updateMyProfile(account)
+    logIn({ role: 'nail-tech', ...account })
     navigate('/nail-tech/business-details')
   }
 
@@ -42,9 +51,9 @@ function NailTechRegister() {
 
           <p className="hidden sm:block text-sm text-gray-500">
             Already have an account?{' '}
-            <button className="text-[#a55c72] font-semibold">
+            <Link to="/login" className="text-[#a55c72] font-semibold">
               Log in
-            </button>
+            </Link>
           </p>
         </div>
       </header>
@@ -269,9 +278,9 @@ function NailTechRegister() {
 
             <p className="text-center text-sm text-gray-500 mt-7 sm:hidden">
               Already have an account?{' '}
-              <button className="text-[#a55c72] font-semibold">
+              <Link to="/login" className="text-[#a55c72] font-semibold">
                 Log in
-              </button>
+              </Link>
             </p>
           </section>
         </div>

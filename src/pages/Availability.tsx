@@ -6,66 +6,23 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-
-type DayAvailability = {
-  day: string
-  enabled: boolean
-  startTime: string
-  endTime: string
-}
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAppData } from '../context/useAppData'
+import type { DayAvailability } from '../types'
 
 function Availability() {
   const navigate = useNavigate()
 
+  const [searchParams] = useSearchParams()
+  const isEditing = searchParams.get('mode') === 'edit'
+  const { myProfile, updateMyProfile } = useAppData()
+
+  // Defaults (Mon-Fri 09:00-17:00, Sat 09:00-15:00) come from the shared store.
   const [availability, setAvailability] =
-    useState<DayAvailability[]>([
-      {
-        day: 'Monday',
-        enabled: true,
-        startTime: '09:00',
-        endTime: '17:00',
-      },
-      {
-        day: 'Tuesday',
-        enabled: true,
-        startTime: '09:00',
-        endTime: '17:00',
-      },
-      {
-        day: 'Wednesday',
-        enabled: true,
-        startTime: '09:00',
-        endTime: '17:00',
-      },
-      {
-        day: 'Thursday',
-        enabled: true,
-        startTime: '09:00',
-        endTime: '17:00',
-      },
-      {
-        day: 'Friday',
-        enabled: true,
-        startTime: '09:00',
-        endTime: '17:00',
-      },
-      {
-        day: 'Saturday',
-        enabled: true,
-        startTime: '09:00',
-        endTime: '15:00',
-      },
-      {
-        day: 'Sunday',
-        enabled: false,
-        startTime: '09:00',
-        endTime: '15:00',
-      },
-    ])
+    useState<DayAvailability[]>(myProfile.availability)
 
   const [sameDayBookings, setSameDayBookings] =
-    useState(false)
+    useState(myProfile.sameDayBookings)
 
   const [error, setError] = useState('')
 
@@ -130,11 +87,11 @@ function Availability() {
       return
     }
 
-    console.log('Availability:', availability)
-    console.log('Same-day bookings:', sameDayBookings)
+    updateMyProfile({ availability, sameDayBookings })
 
-    // Temporary until the onboarding completion/dashboard page exists
-    navigate('/')
+    navigate('/nail-tech/dashboard', {
+      state: { setupComplete: !isEditing },
+    })
   }
 
   return (
@@ -151,18 +108,18 @@ function Availability() {
           </Link>
 
           <p className="hidden sm:block text-sm text-gray-400">
-            Nail Technician Setup
+            {isEditing ? 'Edit Profile' : 'Nail Technician Setup'}
           </p>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-10 md:py-16">
         <Link
-          to="/nail-tech/portfolio"
+          to={isEditing ? '/nail-tech/dashboard' : '/nail-tech/portfolio'}
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#a55c72] mb-10"
         >
           <ArrowLeft size={17} />
-          Back
+          {isEditing ? 'Back to dashboard' : 'Back'}
         </Link>
 
         <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-14 lg:gap-20 items-start">
@@ -208,7 +165,7 @@ function Availability() {
           {/* Availability card */}
           <section className="bg-white border border-rose-100 rounded-[32px] p-7 sm:p-10 shadow-sm">
             {/* Progress */}
-            <div className="mb-9">
+            <div className={isEditing ? 'hidden' : 'mb-9'}>
               <div className="flex justify-between items-center mb-3">
                 <p className="text-xs tracking-widest font-semibold text-[#a55c72]">
                   STEP 5 OF 5
@@ -223,6 +180,12 @@ function Availability() {
                 <div className="w-full h-full bg-[#a55c72] rounded-full" />
               </div>
             </div>
+
+            {isEditing && (
+              <p className="text-xs tracking-widest font-semibold text-[#a55c72] mb-3">
+                EDITING YOUR PROFILE
+              </p>
+            )}
 
             <h2 className="font-serif text-3xl mb-2">
               Your weekly availability
@@ -403,7 +366,7 @@ function Availability() {
                 type="submit"
                 className="w-full bg-[#a55c72] hover:bg-[#87465b] text-white rounded-xl py-4 font-semibold flex items-center justify-center gap-2 transition"
               >
-                Complete Setup
+                {isEditing ? 'Save changes' : 'Complete Setup'}
                 <Check size={18} />
               </button>
             </form>

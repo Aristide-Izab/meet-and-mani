@@ -3,23 +3,25 @@ import {
   ArrowLeft,
   ArrowRight,
   Camera,
+  ChevronLeft,
+  ChevronRight,
   GripVertical,
   ImagePlus,
   Sparkles,
+  Star,
   Trash2,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-
-type PortfolioImage = {
-  id: number
-  file: File
-  preview: string
-}
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAppData } from '../context/useAppData'
+import type { PortfolioImage } from '../types'
 
 function Portfolio() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isEditing = searchParams.get('mode') === 'edit'
+  const { myProfile, updateMyProfile } = useAppData()
 
-  const [images, setImages] = useState<PortfolioImage[]>([])
+  const [images, setImages] = useState<PortfolioImage[]>(myProfile.portfolio)
   const [error, setError] = useState('')
   const [draggedImageId, setDraggedImageId] =
     useState<number | null>(null)
@@ -76,21 +78,28 @@ function Portfolio() {
   }
 
   const removeImage = (id: number) => {
-    setImages((currentImages) => {
-      const imageToRemove = currentImages.find(
-        (image) => image.id === id
-      )
-
-      if (imageToRemove) {
-        URL.revokeObjectURL(imageToRemove.preview)
-      }
-
-      return currentImages.filter(
-        (image) => image.id !== id
-      )
-    })
+    // Previews are not revoked here: the saved profile may still be using them
+    // (for example when editing and leaving without saving).
+    setImages((currentImages) =>
+      currentImages.filter((image) => image.id !== id)
+    )
 
     setError('')
+  }
+
+  // Button-based reordering, so photos can be arranged on touch screens too.
+  const moveImage = (fromIndex: number, toIndex: number) => {
+    setImages((currentImages) => {
+      if (toIndex < 0 || toIndex >= currentImages.length) {
+        return currentImages
+      }
+
+      const reorderedImages = [...currentImages]
+      const [movedImage] = reorderedImages.splice(fromIndex, 1)
+      reorderedImages.splice(toIndex, 0, movedImage)
+
+      return reorderedImages
+    })
   }
 
   const handleDragStart = (id: number) => {
@@ -160,17 +169,9 @@ function Portfolio() {
       return
     }
 
-    console.log(
-      'Portfolio images:',
-      images.map((image) => image.file)
-    )
+    updateMyProfile({ portfolio: images })
 
-    console.log(
-      'Cover photo:',
-      images[0].file
-    )
-
-    navigate('/nail-tech/availability')
+    navigate(isEditing ? '/nail-tech/dashboard' : '/nail-tech/availability')
   }
 
   return (
@@ -187,18 +188,18 @@ function Portfolio() {
           </Link>
 
           <p className="hidden sm:block text-sm text-gray-400">
-            Nail Technician Setup
+            {isEditing ? 'Edit Profile' : 'Nail Technician Setup'}
           </p>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-10 md:py-16">
         <Link
-          to="/nail-tech/services"
+          to={isEditing ? '/nail-tech/dashboard' : '/nail-tech/services'}
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#a55c72] mb-10"
         >
           <ArrowLeft size={17} />
-          Back
+          {isEditing ? 'Back to dashboard' : 'Back'}
         </Link>
 
         <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-14 lg:gap-20 items-start">
@@ -244,7 +245,7 @@ function Portfolio() {
           {/* Portfolio */}
           <section className="bg-white border border-rose-100 rounded-[32px] p-7 sm:p-10 shadow-sm">
             {/* Progress */}
-            <div className="mb-9">
+            <div className={isEditing ? 'hidden' : 'mb-9'}>
               <div className="flex justify-between items-center mb-3">
                 <p className="text-xs tracking-widest font-semibold text-[#a55c72]">
                   STEP 4 OF 5
@@ -259,6 +260,12 @@ function Portfolio() {
                 <div className="w-4/5 h-full bg-[#a55c72] rounded-full" />
               </div>
             </div>
+
+            {isEditing && (
+              <p className="text-xs tracking-widest font-semibold text-[#a55c72] mb-3">
+                EDITING YOUR PROFILE
+              </p>
+            )}
 
             <h2 className="font-serif text-3xl mb-2">
               Build your portfolio
@@ -320,7 +327,7 @@ function Portfolio() {
 
                   {images.length > 1 && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Drag photos to rearrange them.
+                      Drag photos, or use the arrows, to rearrange them.
                     </p>
                   )}
                 </div>
@@ -334,8 +341,8 @@ function Portfolio() {
               {images.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {images.map((image, index) => (
+                    <div key={image.id}>
                     <div
-                      key={image.id}
                       draggable
                       onDragStart={() =>
                         handleDragStart(image.id)
@@ -394,6 +401,45 @@ function Portfolio() {
                         {index + 1}
                       </div>
                     </div>
+
+                    {/* Reorder controls (work on touch screens) */}
+                    <div className="flex items-center justify-between gap-1 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, index - 1)}
+                        disabled={index === 0}
+                        aria-label={`Move photo ${index + 1} earlier`}
+                        className="w-8 h-8 rounded-full border border-rose-100 flex items-center justify-center text-gray-500 hover:text-[#a55c72] disabled:opacity-30 disabled:hover:text-gray-500"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      {index > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => moveImage(index, 0)}
+                          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-[#a55c72]"
+                        >
+                          <Star size={13} />
+                          Make cover
+                        </button>
+                      ) : (
+                        <span className="text-xs text-[#a55c72] font-medium">
+                          Cover
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => moveImage(index, index + 1)}
+                        disabled={index === images.length - 1}
+                        aria-label={`Move photo ${index + 1} later`}
+                        className="w-8 h-8 rounded-full border border-rose-100 flex items-center justify-center text-gray-500 hover:text-[#a55c72] disabled:opacity-30 disabled:hover:text-gray-500"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -410,7 +456,7 @@ function Portfolio() {
                 </p>
 
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Drag your photos into your preferred order. The
+                  Drag your photos (or use the arrows) into your preferred order. The
                   photo in position 1 automatically becomes your
                   cover photo and will be the main image customers
                   see on your profile.
@@ -421,7 +467,7 @@ function Portfolio() {
                 type="submit"
                 className="w-full bg-[#a55c72] hover:bg-[#87465b] text-white rounded-xl py-4 font-semibold flex items-center justify-center gap-2 transition"
               >
-                Continue to Availability
+                {isEditing ? 'Save changes' : 'Continue to Availability'}
                 <ArrowRight size={18} />
               </button>
             </form>

@@ -1,6 +1,7 @@
 import { Sparkles, UserRound } from 'lucide-react'
+import type { AccountType } from '../types'
 
-export type AccountType = 'customer' | 'nail-tech'
+export type { AccountType }
 
 type AccountTypeToggleProps = {
   value: AccountType

@@ -6,18 +6,16 @@ import {
   MapPin,
   Sparkles
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAppData } from '../context/useAppData'
 
 function BusinessDetails() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isEditing = searchParams.get('mode') === 'edit'
+  const { myProfile, updateMyProfile } = useAppData()
 
-  const [form, setForm] = useState({
-    businessName: '',
-    city: '',
-    serviceArea: '',
-    yearsExperience: '',
-    bio: '',
-  })
+  const [form, setForm] = useState(myProfile.business)
 
   const handleChange = (
     event:
@@ -33,9 +31,9 @@ function BusinessDetails() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    console.log('Business details:', form)
+    updateMyProfile({ business: form })
 
-    navigate('/nail-tech/services')
+    navigate(isEditing ? '/nail-tech/dashboard' : '/nail-tech/services')
   }
 
   return (
@@ -53,7 +51,7 @@ function BusinessDetails() {
           </Link>
 
           <p className="text-sm text-gray-400 hidden sm:block">
-            Nail Technician Setup
+            {isEditing ? 'Edit Profile' : 'Nail Technician Setup'}
           </p>
 
         </div>
@@ -62,11 +60,11 @@ function BusinessDetails() {
       <main className="max-w-6xl mx-auto px-6 py-10 md:py-16">
 
         <Link
-          to="/nail-tech/register"
+          to={isEditing ? '/nail-tech/dashboard' : '/nail-tech/register'}
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#a55c72] mb-10"
         >
           <ArrowLeft size={17} />
-          Back
+          {isEditing ? 'Back to dashboard' : 'Back'}
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-start">
@@ -117,7 +115,7 @@ function BusinessDetails() {
           <section className="bg-white border border-rose-100 rounded-[32px] p-7 sm:p-10 shadow-sm">
 
             {/* Progress */}
-            <div className="mb-9">
+            <div className={isEditing ? 'hidden' : 'mb-9'}>
 
               <div className="flex justify-between items-center mb-3">
                 <p className="text-xs tracking-widest font-semibold text-[#a55c72]">
@@ -134,6 +132,12 @@ function BusinessDetails() {
               </div>
 
             </div>
+
+            {isEditing && (
+              <p className="text-xs tracking-widest font-semibold text-[#a55c72] mb-3">
+                EDITING YOUR PROFILE
+              </p>
+            )}
 
             <h2 className="font-serif text-3xl mb-2">
               Business details
@@ -278,7 +282,7 @@ function BusinessDetails() {
                 type="submit"
                 className="w-full bg-[#a55c72] hover:bg-[#87465b] text-white rounded-xl py-4 font-semibold flex items-center justify-center gap-2 transition"
               >
-                Continue to Services
+                {isEditing ? 'Save changes' : 'Continue to Services'}
                 <ArrowRight size={18} />
               </button>
 

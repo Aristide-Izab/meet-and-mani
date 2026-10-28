@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import NailTechRegister from './pages/NailTechRegister'
 import BusinessDetails from './pages/BusinessDetails'
 import ServicesPricing from './pages/ServicesPricing'
@@ -8,6 +8,15 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import CustomerDashboard from './pages/CustomerDashboard'
 import NailTechDashboard from './pages/NailTechDashboard'
+import SearchResults from './pages/SearchResults'
+import NailTechProfilePage from './pages/NailTechProfilePage'
+import BookAppointment from './pages/BookAppointment'
+import BookingConfirmation from './pages/BookingConfirmation'
+import ForgotPassword from './pages/ForgotPassword'
+import NotFound from './pages/NotFound'
+import RequireAccount from './components/RequireAccount'
+import ScrollToTop from './components/ScrollToTop'
+import { useAppData } from './context/useAppData'
 import { useState } from 'react'
 import {
   ArrowRight,
@@ -23,18 +32,21 @@ import {
 const services = [
   {
     name: 'Signature Manicure',
+    filter: 'Manicure',
     description: 'Beautiful nails, beautifully you.',
     image:
       'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
   },
   {
     name: 'Nail Art',
+    filter: 'Nail art',
     description: 'A little creativity at your fingertips.',
     image:
       'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=800',
   },
   {
     name: 'Gel Extensions',
+    filter: 'Gel',
     description: 'Your dream nails, made possible.',
     image:
       'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=800',
@@ -44,18 +56,28 @@ const services = [
 function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [location, setLocation] = useState('')
+  const navigate = useNavigate()
+  const { currentUser } = useAppData()
+
+  const dashboardPath =
+    currentUser?.role === 'nail-tech' ? '/nail-tech/dashboard' : '/customer/dashboard'
+
+  const searchNailTechs = () => {
+    const city = location.trim()
+    navigate(city ? `/nail-techs?city=${encodeURIComponent(city)}` : '/nail-techs')
+  }
 
   return (
     <div className="min-h-screen">
       {/* Navigation */}
       <header className="bg-white border-b border-rose-100">
         <nav className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="text-2xl font-semibold tracking-tight text-[#a55c72]"
           >
             Meet&Mani<span className="text-[#dca7b6]">.</span>
-          </a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-9 text-sm">
             <a href="#home" className="hover:text-[#a55c72]">
@@ -64,6 +86,9 @@ function HomePage() {
             <a href="#services" className="hover:text-[#a55c72]">
               Services
             </a>
+            <Link to="/nail-techs" className="hover:text-[#a55c72]">
+              Find a Nail Tech
+            </Link>
             <a href="#how-it-works" className="hover:text-[#a55c72]">
               How It Works
             </a>
@@ -73,15 +98,26 @@ function HomePage() {
           </div>
 
           <div className="hidden md:flex gap-3">
-            <Link to="/login" className="px-5 py-2 text-[#a55c72]">
-              Log In
-            </Link>
-            <Link
-              to="/register"
-              className="px-6 py-2.5 bg-[#a55c72] text-white rounded-full hover:bg-[#87465b]"
-            >
-              Sign Up
-            </Link>
+            {currentUser ? (
+              <Link
+                to={dashboardPath}
+                className="px-6 py-2.5 bg-[#a55c72] text-white rounded-full hover:bg-[#87465b]"
+              >
+                My Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="px-5 py-2 text-[#a55c72]">
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-6 py-2.5 bg-[#a55c72] text-white rounded-full hover:bg-[#87465b]"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -101,21 +137,33 @@ function HomePage() {
             <a href="#services" onClick={() => setMenuOpen(false)}>
               Services
             </a>
+            <Link to="/nail-techs">Find a Nail Tech</Link>
             <a href="#how-it-works" onClick={() => setMenuOpen(false)}>
               How It Works
             </a>
             <a href="#professionals" onClick={() => setMenuOpen(false)}>
               For Professionals
             </a>
-            <Link to="/login" className="text-left">
-              Log In
-            </Link>
-            <Link
-              to="/register"
-              className="bg-[#a55c72] text-white rounded-full py-3 text-center"
-            >
-              Sign Up
-            </Link>
+            {currentUser ? (
+              <Link
+                to={dashboardPath}
+                className="bg-[#a55c72] text-white rounded-full py-3 text-center"
+              >
+                My Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="text-left">
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-[#a55c72] text-white rounded-full py-3 text-center"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         )}
       </header>
@@ -147,17 +195,16 @@ function HomePage() {
                   value={location}
                   onChange={(event) => setLocation(event.target.value)}
                   placeholder="Enter your city"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') searchNailTechs()
+                  }}
                   aria-label="Your city"
                   className="outline-none w-full py-3 text-sm"
                 />
               </div>
 
               <button
-                onClick={() =>
-                  document.getElementById("services")?.scrollIntoView({
-                    behavior: "smooth",
-                  })
-                }
+                onClick={searchNailTechs}
                 className="bg-[#a55c72] text-white px-6 py-3 rounded-xl flex justify-center items-center gap-2"
               >
                 Explore <ArrowRight size={17} />
@@ -213,9 +260,12 @@ function HomePage() {
               <div className="p-7">
                 <h3 className="font-serif text-2xl mb-2">{service.name}</h3>
                 <p className="text-gray-500 mb-5">{service.description}</p>
-                <button className="text-[#a55c72] flex items-center gap-2 font-medium">
+                <Link
+                  to={`/nail-techs?service=${encodeURIComponent(service.filter)}`}
+                  className="text-[#a55c72] flex items-center gap-2 font-medium"
+                >
                   Explore service <ArrowRight size={17} />
-                </button>
+                </Link>
               </div>
             </div>
           ))}
@@ -291,18 +341,49 @@ function HomePage() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-      <Route path="/nail-tech/register" element={<NailTechRegister />} />
-      <Route path="/nail-tech/business-details" element={<BusinessDetails />} />
-      <Route path="/nail-tech/services" element={<ServicesPricing />} />
-      <Route path="/nail-tech/portfolio" element={<Portfolio />} />
-      <Route path="/nail-tech/availability" element={<Availability />} />
-      <Route path="/nail-tech/dashboard" element={<NailTechDashboard />} />
-    </Routes>
+    <>
+      <ScrollToTop />
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+
+        {/* Accounts */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Customer journey */}
+        <Route path="/nail-techs" element={<SearchResults />} />
+        <Route path="/nail-techs/:id" element={<NailTechProfilePage />} />
+        <Route path="/nail-techs/:id/book" element={<BookAppointment />} />
+        <Route path="/bookings/:bookingId" element={<BookingConfirmation />} />
+        <Route
+          path="/customer/dashboard"
+          element={
+            <RequireAccount role="customer">
+              <CustomerDashboard />
+            </RequireAccount>
+          }
+        />
+
+        {/* Nail technician onboarding and dashboard */}
+        <Route path="/nail-tech/register" element={<NailTechRegister />} />
+        <Route path="/nail-tech/business-details" element={<BusinessDetails />} />
+        <Route path="/nail-tech/services" element={<ServicesPricing />} />
+        <Route path="/nail-tech/portfolio" element={<Portfolio />} />
+        <Route path="/nail-tech/availability" element={<Availability />} />
+        <Route
+          path="/nail-tech/dashboard"
+          element={
+            <RequireAccount role="nail-tech">
+              <NailTechDashboard />
+            </RequireAccount>
+          }
+        />
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
 

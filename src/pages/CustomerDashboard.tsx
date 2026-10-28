@@ -1,115 +1,80 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   CalendarDays,
   Clock,
-  Eye,
-  EyeOff,
   Heart,
-  MapPin,
+  History,
   Search,
   Sparkles,
-  Star,
 } from 'lucide-react'
+import BookingStatusBadge from '../components/BookingStatusBadge'
 import DashboardHeader from '../components/DashboardHeader'
-import DemoBadge from '../components/DemoBadge'
+import TechnicianCard from '../components/TechnicianCard'
+import { useAppData } from '../context/useAppData'
+import type { Booking } from '../types'
+import { formatDate, formatPrice, isActiveBooking, isUpcoming } from '../utils/booking'
 
-type Booking = {
-  id: number
-  technician: string
-  service: string
-  date: string
-  time: string
-  price: number
-  status: 'Confirmed' | 'Pending'
-}
-
-// Demo values only. Real data will come from the backend.
-const demoBookings: Booking[] = [
-  {
-    id: 1,
-    technician: 'Sample Nail Studio',
-    service: 'Gel Manicure',
-    date: 'Sat, 1 Nov',
-    time: '10:00',
-    price: 350,
-    status: 'Confirmed',
-  },
-  {
-    id: 2,
-    technician: 'Sample Nail Artist',
-    service: 'Nail Art (full set)',
-    date: 'Thu, 6 Nov',
-    time: '14:30',
-    price: 480,
-    status: 'Pending',
-  },
-]
-
-const demoTechnicians = [
-  {
-    name: 'Sample Nail Studio',
-    area: 'Cape Town CBD',
-    rating: '4.9',
-    speciality: 'Gel & acrylics',
-    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600',
-  },
-  {
-    name: 'Sample Nail Artist',
-    area: 'Bellville',
-    rating: '4.8',
-    speciality: 'Nail art',
-    image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=600',
-  },
-  {
-    name: 'Sample Mobile Tech',
-    area: 'Claremont',
-    rating: '4.7',
-    speciality: 'Mobile visits',
-    image: 'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=600',
-  },
-]
+const byDateTime = (a: Booking, b: Booking) =>
+  `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`)
 
 function CustomerDashboard() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const firstName = (location.state as { firstName?: string } | null)?.firstName
+  const { currentUser, bookings, updateBookingStatus, favourites, technicians } =
+    useAppData()
 
-  const [showSampleBookings, setShowSampleBookings] = useState(false)
   const [city, setCity] = useState('')
+
+  const myBookings = bookings.filter(
+    (booking) => booking.customerEmail === currentUser?.email
+  )
+  const upcoming = myBookings
+    .filter((booking) => isActiveBooking(booking) && isUpcoming(booking))
+    .sort(byDateTime)
+  const history = myBookings
+    .filter((booking) => !(isActiveBooking(booking) && isUpcoming(booking)))
+    .sort(byDateTime)
+    .reverse()
+
+  const savedTechnicians = technicians.filter((technician) =>
+    favourites.includes(technician.id)
+  )
+  const suggestions = [...technicians]
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+    .slice(0, 3)
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    // Search will be connected to real nail technician listings later.
-    console.log('Search city:', city)
-    navigate('/')
+    navigate(city.trim() ? `/nail-techs?city=${encodeURIComponent(city.trim())}` : '/nail-techs')
   }
+
+  const handleCancel = (booking: Booking) => {
+    if (window.confirm(`Cancel your ${booking.serviceName} on ${formatDate(booking.date)}?`)) {
+      updateBookingStatus(booking.id, 'Cancelled')
+    }
+  }
+
+  const stats = [
+    { icon: CalendarDays, label: 'Upcoming bookings', value: upcoming.length },
+    { icon: Heart, label: 'Saved nail techs', value: savedTechnicians.length },
+    { icon: History, label: 'Total bookings', value: myBookings.length },
+  ]
 
   return (
     <div className="min-h-screen bg-[#fffaf8]">
-      <DashboardHeader label="Customer Account" />
+      <DashboardHeader label="Customer account" />
 
       <main className="max-w-7xl mx-auto px-6 py-10 md:py-14">
-        {/* Prototype banner */}
-        <div className="bg-[#fff7f9] border border-rose-100 rounded-2xl px-5 py-4 mb-10 flex items-start gap-3">
-          <Sparkles size={18} className="text-[#a55c72] shrink-0 mt-0.5" />
-          <p className="text-sm text-gray-500 leading-relaxed">
-            <span className="font-medium text-gray-700">Prototype preview.</span>{' '}
-            Items marked <span className="font-semibold text-[#a55c72]">DEMO</span>{' '}
-            are sample data to show how your account will work.
-          </p>
-        </div>
-
         {/* Welcome + search */}
-        <section className="bg-[#fcf1ee] rounded-[32px] px-7 py-10 sm:px-10 md:px-14 mb-12">
+        <section className="bg-[#fcf1ee] rounded-[32px] px-7 py-10 sm:px-10 md:px-14 mb-10">
           <div className="inline-flex items-center gap-2 text-[#a55c72] text-sm font-medium mb-4">
             <Sparkles size={17} />
             YOUR BEAUTY SPACE
           </div>
 
           <h1 className="font-serif text-4xl md:text-5xl leading-tight mb-3">
-            {firstName ? `Hi ${firstName},` : 'Welcome back,'}{' '}
+            Hi {currentUser?.firstName},{' '}
             <span className="italic text-[#b76f85]">ready for fresh nails?</span>
           </h1>
 
@@ -126,8 +91,8 @@ function CustomerDashboard() {
               <input
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
-                placeholder="Enter your city"
-                aria-label="Your city"
+                placeholder="Enter your city or area"
+                aria-label="Your city or area"
                 className="outline-none w-full py-3 text-sm"
               />
             </div>
@@ -140,112 +105,130 @@ function CustomerDashboard() {
           </form>
         </section>
 
-        <div className="grid lg:grid-cols-[1.4fr_1fr] gap-8 items-start mb-12">
-          {/* Bookings */}
-          <section className="bg-white border border-rose-100 rounded-[32px] p-7 sm:p-9">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
-              <div>
-                <h2 className="font-serif text-3xl mb-1">My bookings</h2>
-                <p className="text-sm text-gray-500">
-                  Your upcoming appointments will show here.
-                </p>
+        {/* Stats */}
+        <section className="grid sm:grid-cols-3 gap-5 mb-10">
+          {stats.map(({ icon: Icon, label, value }) => (
+            <div
+              key={label}
+              className="bg-white border border-rose-100 rounded-3xl p-6 flex items-center gap-4"
+            >
+              <div className="w-11 h-11 shrink-0 rounded-full bg-[#f9e9ed] flex items-center justify-center">
+                <Icon size={20} className="text-[#a55c72]" />
               </div>
-
-              <button
-                type="button"
-                onClick={() => setShowSampleBookings(!showSampleBookings)}
-                className="self-start sm:self-auto inline-flex items-center gap-2 text-sm text-[#a55c72] border border-rose-100 hover:border-[#a55c72] rounded-full px-4 py-2 transition"
-              >
-                {showSampleBookings ? <EyeOff size={16} /> : <Eye size={16} />}
-                {showSampleBookings ? 'Hide sample' : 'Show sample'}
-              </button>
+              <div>
+                <p className="font-serif text-3xl leading-none mb-1">{value}</p>
+                <p className="text-sm text-gray-500">{label}</p>
+              </div>
             </div>
+          ))}
+        </section>
 
-            {showSampleBookings ? (
-              <ul className="space-y-3">
-                {demoBookings.map((booking) => (
+        {/* Bookings */}
+        <section className="bg-white border border-rose-100 rounded-[32px] p-7 sm:p-9 mb-12">
+          <h2 className="font-serif text-3xl mb-1">My bookings</h2>
+          <p className="text-sm text-gray-500 mb-7">
+            Requests stay pending until the nail tech accepts them.
+          </p>
+
+          {upcoming.length > 0 ? (
+            <ul className="space-y-3">
+              {upcoming.map((booking) => (
+                <li
+                  key={booking.id}
+                  className="rounded-2xl border border-[#e7c1cc] bg-[#fffafb] p-4 flex flex-col md:flex-row md:items-center gap-4"
+                >
+                  <div className="md:w-32 shrink-0">
+                    <p className="text-sm font-medium">{formatDate(booking.date)}</p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                      <Clock size={13} />
+                      {booking.time}
+                    </p>
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{booking.serviceName}</p>
+                    <Link
+                      to={`/nail-techs/${booking.technicianId}`}
+                      className="text-xs text-gray-500 hover:text-[#a55c72] mt-1 inline-block"
+                    >
+                      {booking.technicianName}
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-sm font-medium">{formatPrice(booking.price)}</p>
+                    <BookingStatusBadge status={booking.status} />
+                    <Link
+                      to={`/bookings/${booking.id}`}
+                      className="text-xs text-[#a55c72] hover:underline"
+                    >
+                      Details
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleCancel(booking)}
+                      className="text-xs text-gray-400 hover:text-red-500"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="rounded-3xl bg-[#fff7f9] px-6 py-12 text-center">
+              <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-white flex items-center justify-center">
+                <CalendarDays size={24} className="text-[#a55c72]" />
+              </div>
+              <h3 className="font-serif text-2xl mb-2">No upcoming bookings</h3>
+              <p className="text-sm text-gray-500 max-w-sm mx-auto leading-relaxed mb-6">
+                Find a nail technician you love and request your first appointment.
+              </p>
+              <Link
+                to="/nail-techs"
+                className="inline-flex items-center gap-2 bg-[#a55c72] hover:bg-[#87465b] text-white rounded-full px-6 py-3 text-sm font-medium transition"
+              >
+                Find a nail tech <ArrowRight size={16} />
+              </Link>
+            </div>
+          )}
+
+          {history.length > 0 && (
+            <div className="mt-8 pt-7 border-t border-rose-100">
+              <h3 className="text-sm font-medium text-gray-500 mb-4">Past & cancelled</h3>
+              <ul className="space-y-2">
+                {history.map((booking) => (
                   <li
                     key={booking.id}
-                    className="rounded-2xl border border-[#e7c1cc] bg-[#fffafb] p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                    className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500"
                   >
-                    <div className="sm:w-28 shrink-0">
-                      <p className="text-sm font-medium">{booking.date}</p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                        <Clock size={13} />
-                        {booking.time}
-                      </p>
-                    </div>
-
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{booking.service}</p>
-                      <p className="text-xs text-gray-400 mt-1">{booking.technician}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <p className="text-sm font-medium">R {booking.price}</p>
-                      <span
-                        className={`text-xs rounded-full px-3 py-1 ${
-                          booking.status === 'Confirmed'
-                            ? 'bg-[#a55c72] text-white'
-                            : 'bg-[#f9e9ed] text-[#a55c72]'
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                      <DemoBadge />
-                    </div>
+                    <span className="w-28">{formatDate(booking.date)}</span>
+                    <span className="flex-1">
+                      {booking.serviceName} · {booking.technicianName}
+                    </span>
+                    <BookingStatusBadge status={booking.status} />
                   </li>
                 ))}
               </ul>
-            ) : (
-              <div className="rounded-3xl bg-[#fff7f9] px-6 py-12 text-center">
-                <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-white flex items-center justify-center">
-                  <CalendarDays size={24} className="text-[#a55c72]" />
-                </div>
-                <h3 className="font-serif text-2xl mb-2">No bookings yet</h3>
-                <p className="text-sm text-gray-500 max-w-sm mx-auto leading-relaxed">
-                  When you book an appointment with a nail technician, it will
-                  appear here.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* Account summary */}
-          <section className="bg-white border border-rose-100 rounded-[32px] p-7 sm:p-9">
-            <h2 className="font-serif text-3xl mb-6">Your account</h2>
-
-            <div className="space-y-3">
-              {[
-                { icon: CalendarDays, label: 'Upcoming bookings', value: '2' },
-                { icon: Heart, label: 'Saved nail techs', value: '3' },
-                { icon: Star, label: 'Reviews written', value: '1' },
-              ].map(({ icon: Icon, label, value }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-4 rounded-2xl border border-rose-100 p-4"
-                >
-                  <div className="w-10 h-10 shrink-0 rounded-full bg-[#f9e9ed] flex items-center justify-center">
-                    <Icon size={18} className="text-[#a55c72]" />
-                  </div>
-                  <p className="text-sm flex-1">{label}</p>
-                  <p className="font-serif text-2xl">{value}</p>
-                  <DemoBadge />
-                </div>
-              ))}
             </div>
-          </section>
-        </div>
+          )}
+        </section>
 
-        {/* Saved / recommended technicians */}
+        {/* Saved or suggested nail techs */}
         <section>
           <div className="flex items-end justify-between gap-4 mb-6">
             <div>
-              <h2 className="font-serif text-3xl mb-1">Nail techs you may like</h2>
-              <p className="text-sm text-gray-500">Sample profiles to show the layout.</p>
+              <h2 className="font-serif text-3xl mb-1">
+                {savedTechnicians.length > 0 ? 'Saved nail techs' : 'Nail techs you may like'}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {savedTechnicians.length > 0
+                  ? 'Your favourites, ready to book again.'
+                  : 'Tap the heart on a profile to save it here.'}
+              </p>
             </div>
             <Link
-              to="/"
+              to="/nail-techs"
               className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-[#a55c72]"
             >
               Explore more <ArrowRight size={16} />
@@ -253,45 +236,11 @@ function CustomerDashboard() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {demoTechnicians.map((tech) => (
-              <div
-                key={tech.name}
-                className="rounded-3xl overflow-hidden bg-white border border-rose-100"
-              >
-                <div className="relative">
-                  <img
-                    src={tech.image}
-                    alt={tech.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <DemoBadge />
-                  </div>
-                  <button
-                    type="button"
-                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#a55c72]"
-                    aria-label={`Save ${tech.name}`}
-                  >
-                    <Heart size={17} />
-                  </button>
-                </div>
-
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="font-serif text-xl">{tech.name}</h3>
-                    <p className="text-sm flex items-center gap-1 shrink-0">
-                      <Star size={15} className="text-[#b76f85] fill-[#b76f85]" />
-                      {tech.rating}
-                    </p>
-                  </div>
-                  <p className="text-sm text-gray-500 flex items-center gap-1 mb-1">
-                    <MapPin size={14} />
-                    {tech.area}
-                  </p>
-                  <p className="text-sm text-gray-400">{tech.speciality}</p>
-                </div>
-              </div>
-            ))}
+            {(savedTechnicians.length > 0 ? savedTechnicians : suggestions).map(
+              (technician) => (
+                <TechnicianCard key={technician.id} technician={technician} />
+              )
+            )}
           </div>
         </section>
       </main>

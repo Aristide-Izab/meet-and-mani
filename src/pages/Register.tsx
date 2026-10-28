@@ -11,8 +11,9 @@ import {
   Store,
   UserRound,
 } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import AccountTypeToggle, { type AccountType } from '../components/AccountTypeToggle'
+import { useAppData } from '../context/useAppData'
 
 const onboardingSteps = [
   { label: 'Create your account', icon: UserRound },
@@ -24,7 +25,10 @@ const onboardingSteps = [
 
 function Register() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
+  const { logIn } = useAppData()
+  const returnTo = (location.state as { from?: string } | null)?.from
 
   const [accountType, setAccountType] = useState<AccountType>(
     searchParams.get('type') === 'nail-tech' ? 'nail-tech' : 'customer'
@@ -64,10 +68,15 @@ function Register() {
       return
     }
 
-    // Dummy registration: nothing is saved yet.
-    // Real accounts will be created through the Spring Boot backend.
-    console.log('Customer registration:', { ...form, password: '[hidden]' })
-    navigate('/customer/dashboard', { state: { firstName: form.firstName } })
+    // Dummy registration: kept in the in-memory store until the backend exists.
+    logIn({
+      role: 'customer',
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim().toLowerCase(),
+    })
+
+    navigate(returnTo ?? '/customer/dashboard')
   }
 
   const inputClass =
