@@ -4,6 +4,10 @@ import BusinessDetails from './pages/BusinessDetails'
 import ServicesPricing from './pages/ServicesPricing'
 import Portfolio from './pages/Portfolio'
 import Availability from './pages/Availability'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import CustomerDashboard from './pages/CustomerDashboard'
+import NailTechDashboard from './pages/NailTechDashboard'
 import { useState } from 'react'
 import {
   ArrowRight,
@@ -69,10 +73,15 @@ function HomePage() {
           </div>
 
           <div className="hidden md:flex gap-3">
-            <button className="px-5 py-2 text-[#a55c72]">Log In</button>
-            <button className="px-6 py-2.5 bg-[#a55c72] text-white rounded-full hover:bg-[#87465b]">
+            <Link to="/login" className="px-5 py-2 text-[#a55c72]">
+              Log In
+            </Link>
+            <Link
+              to="/register"
+              className="px-6 py-2.5 bg-[#a55c72] text-white rounded-full hover:bg-[#87465b]"
+            >
               Sign Up
-            </button>
+            </Link>
           </div>
 
           <button
@@ -98,10 +107,15 @@ function HomePage() {
             <a href="#professionals" onClick={() => setMenuOpen(false)}>
               For Professionals
             </a>
-            <button className="text-left">Log In</button>
-            <button className="bg-[#a55c72] text-white rounded-full py-3">
+            <Link to="/login" className="text-left">
+              Log In
+            </Link>
+            <Link
+              to="/register"
+              className="bg-[#a55c72] text-white rounded-full py-3 text-center"
+            >
               Sign Up
-            </button>
+            </Link>
           </div>
         )}
       </header>
@@ -279,11 +293,15 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/customer/dashboard" element={<CustomerDashboard />} />
       <Route path="/nail-tech/register" element={<NailTechRegister />} />
       <Route path="/nail-tech/business-details" element={<BusinessDetails />} />
       <Route path="/nail-tech/services" element={<ServicesPricing />} />
       <Route path="/nail-tech/portfolio" element={<Portfolio />} />
       <Route path="/nail-tech/availability" element={<Availability />} />
+      <Route path="/nail-tech/dashboard" element={<NailTechDashboard />} />
     </Routes>
   );
 }
